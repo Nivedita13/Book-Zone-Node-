@@ -14,8 +14,8 @@ var express               = require("express"),
     methodOverride       = require("method-override"); 
     
 
-    mongoose.connect("mongodb://localhost/library");
-// mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
+    // mongoose.connect("mongodb://localhost/library");
+mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
 main.use(bodyParser.urlencoded({extended : true}));   
 main.set("view engine", "ejs");
 main.use(methodOverride("_method"));
@@ -345,6 +345,6 @@ function isLoggedin(req, res, next){
 //============
 //Listen route
 //============
-main.listen(process.env.PORT||3003, function(req, res){
+main.listen(process.env.PORT, function(req, res){
     console.log("SERVER IS STARTED");
 });
