@@ -108,7 +108,7 @@ main.get("/decision/user_logout", function(req, res){
         res.redirect("/decision");
 });
 
-main.get("/decision/admin_signup", function(req, res){  //admin signup route
+main.get("/decision/adminsignup", function(req, res){  //admin signup route
     res.render("admin_signup");
 });
 
