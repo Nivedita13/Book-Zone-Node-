@@ -9,12 +9,12 @@ var express               = require("express"),
     LocalStrategy         = require("passport-local"),
     passportLocalMongoose = require("passport-local-mongoose"),
     user                  = require("./models/user_schema"),
-    admin                 = require("./models/admin_schema"),
-    books                 = require("./models/books");
+    books                 = require("./models/books"),
     requested_books       = require("./models/requestedBooks_schema"),
     methodOverride       = require("method-override"); 
     
 
+    // mongoose.connect("mongodb://localhost/library");
 mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
 main.use(bodyParser.urlencoded({extended : true}));   
 main.set("view engine", "ejs");
@@ -43,6 +43,9 @@ main.use(function(req, res, next){
 //============================
 //Routes
 //=============================
+
+
+
 main.get("/", function(req, res){   //main route
     res.render("start");
 });
@@ -62,6 +65,8 @@ main.get("/decision", function(req, res){  //route to seelct user or admin
 main.get("/user", function(req, res){  //user route
     res.render("user");
 });
+
+
 
 //Authentication Routes
 main.get("/decision/user_signup", function(req, res){  //user signup route
@@ -103,28 +108,27 @@ main.get("/decision/user_logout", function(req, res){
         res.redirect("/decision");
 });
 
-// main.get("/decision/admin_signup", function(req, res){  //admin signup route
-//     res.render("admin_signup");
-// });
+main.get("/decision/admin_signup", function(req, res){  //admin signup route
+    res.render("admin_signup");
+});
 
 
-// main.post("/decision/admin_signup", function(req, res){ //to handle admin sign up
-//     var newAdmin = new admin({
-//         username : req.body.username,
-//         type     : "admin"
-//     });
+main.post("/decision/admin_signup", function(req, res){ //to handle admin sign up
+    var newUser = new user({
+        username : req.body.username,
+        type    : "admin"
+    });
         
-//      admin.register(newAdmin,req.body.password,function(err, user){
-//         if(err){
-//             console.log(err);
-//             res.redirect("/decision/admin_signup");
-//         }else{
-//             passport.authenticate("local")(req, res, function(){
-//                 res.render("admin");
-//             });
-//     }
-//  });
-// });
+         user.register(newUser,req.body.password,function(err, user){
+        if(err){
+            console.log(err);
+        }else{
+            passport.authenticate("local")(req, res, function(){
+                res.redirect("/admin");
+            });
+        }
+    });
+});
 
 main.get("/decision/admin_login", function(req, res){ //admin login
     res.render("admin_login");
@@ -341,6 +345,6 @@ function isLoggedin(req, res, next){
 //============
 //Listen route
 //============
-main.listen(process.env.PORT , function(req, res){
+main.listen(process.env.PORT, function(req, res){
     console.log("SERVER IS STARTED");
 });
