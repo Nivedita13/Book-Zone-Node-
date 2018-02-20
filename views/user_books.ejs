@@ -1,0 +1,44 @@
+<% include partials/header %>
+
+<style>
+    table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+</style>
+<table>
+    <tr>
+        <th><Base>BOOK NAME</Base></th>
+        <th>SUBJECT</th>
+        <th>AUTHOR</th>
+        <th>BOOK ID</th>
+        <th>NO OF COPIES</th>
+        <th>ISSUE BUTTON</th>
+    </tr>
+    <% books.forEach(function(book){ %>
+        <tr>
+            <td> <%= book.name %> </td>
+            <td> <%= book.subject %> </td>
+            <td> <%= book.author %> </td>
+            <td> <%= book.id %> </td>
+            <td> <%= book.copies %> </td>
+            <td> 
+                <a class="btn btn-primary" href="/issue/<%= book._id %>/<%= currentUser._id%>">ISSUE</a>
+            </td>
+        </tr>
+    <% }); %>
+</table>
+
+<% include partials/footer %>

@@ -1,0 +1,11 @@
+<% include partials/header %>
+<h1>Requested books here</h1>
+
+<% allBooks.forEach(function(book){  %>
+    <ul>
+        <a href="/admin/requested_books/<%= book._id %>">
+
+            <li><%= book.name %></li>
+        </a>
+    </ul> 
+<% }); %>

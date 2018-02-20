@@ -1,0 +1,14 @@
+<% include partials/header %>
+
+<strong><%=  book.name %></strong>
+<ul>
+     <% usersarray.forEach(function(user){ %>
+    <li>
+        <%= user.username %>
+        <a class="btn btn-primary" href="/admin/allow/<%= book._id %>/<%= user._id %>">ALLOW</a>
+        <a class="btn btn-primary" href="/admin/deny/<%= book._id %>/<%= user._id %>">DENY</a>
+    </li>
+    <% }) %>
+</ul>
+
+  

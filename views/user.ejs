@@ -1,0 +1,14 @@
+<% include partials/header %>
+
+<h1>
+    <%= currentUser.username %>
+</h1>
+
+<form action="/user_books" method="get">
+    <button type="submit">ALL BOOKS</button>
+</form>
+
+<% include partials/footer %>
+
+
+

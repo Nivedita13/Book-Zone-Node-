@@ -1,0 +1,38 @@
+<% include partials/header %>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<h1>NEW BOOK ENTRY</h1>
+
+<form action="/books_entry" method="post">
+
+    <div class="form-group">
+        <label for="subject">Subject</label>
+        <input type="text" class="form-control" id="subject" name="subject" placeholder="subject">    
+    </div>
+
+    <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" class="form-control" id="name" name="name" placeholder="name">    
+    </div>
+
+    <div class="form-group">
+        <label for="author">Author</label>
+        <input type="text" class="form-control" id="author" name="author" placeholder="author">    
+    </div>
+     
+    <div class="form-group">
+        <label for="id">Book ID</label>
+        <input type="number" class="form-control" id="id" name="id" placeholder="id">    
+    </div>
+
+    <div class="form-group">
+        <label for="copies">COPIES</label>
+        <input type="number" class="form-control" id="copies" name="copies" placeholder="no. of copies">    
+    </div>
+
+    <button>SUBMIT</button>
+</form>
+
+
+<% include partials/footer %>
