@@ -11,15 +11,15 @@ var express               = require("express"),
     user                  = require("./models/user_schema"),
     books                 = require("./models/books"),
     requested_books       = require("./models/requestedBooks_schema"),
-    methodOverride       = require("method-override"); 
+    methodOverride        = require("method-override"),
+    flash                 = require("connect-flash"); 
     
 
-    // mongoose.connect("mongodb://localhost/library");
-mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
+mongoose.connect("mongodb://Nivedita:nivedita@ds243798.mlab.com:43798/library"); //Connect to database
 main.use(bodyParser.urlencoded({extended : true}));   
 main.set("view engine", "ejs");
 main.use(methodOverride("_method"));
-
+main.use(flash());
 //======================
 //Passport configuration
 //======================
@@ -37,6 +37,8 @@ passport.deserializeUser(user.deserializeUser());
 
 main.use(function(req, res, next){
     res.locals.currentUser = req.user;
+    res.locals.error   = req.flash("error");
+    res.locals.success  = req.flash("success") ;
     next();
  });
  
@@ -62,7 +64,7 @@ main.get("/decision", function(req, res){  //route to seelct user or admin
 //     r
 // });
 
-main.get("/user", function(req, res){  //user route
+main.get("/user",isUser, function(req, res){  //user route
     res.render("user");
 });
 
@@ -147,7 +149,7 @@ main.get("decision/admin_logout", function(req, res){
 });
 
 
-main.get("/admin", function(req, res){  //admin route
+main.get("/admin",isAdmin ,function(req, res){  //admin route
     res.render("admin");
 });
 
@@ -155,7 +157,7 @@ main.get("/books_entry", isLoggedin, function(req, res){  //books route
     res.render("books_entry");
 });
 
-main.get("/admin/allusers", function(req, res){   // to show all users to admin
+main.get("/admin/allusers",function(req, res){   // to show all users to admin
     user.find(function(err,allUsers){
         if(err){
             console.log(err);
@@ -338,6 +340,26 @@ function isLoggedin(req, res, next){
     }else{
         console.log("login first");
         res.redirect("decision");
+    }
+}
+
+function isAdmin(req, res, next){
+    if(req.user.type == "admin"){
+        next();
+    }else{
+        req.logout();
+        req.flash("error","You are not an admin");
+        return res.redirect("/decision");
+    }
+}
+
+function isUser(req, res, next){
+    if(req.user.type == "user"){
+        next();
+    }else{
+        req.logout();
+        req.flash("error","You are not an user");
+        return res.redirect("/decision");
     }
 }
 
