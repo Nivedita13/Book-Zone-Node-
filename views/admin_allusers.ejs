@@ -25,13 +25,16 @@ tr:nth-child(even) {
         <!-- <th>BLOCK BUTTON</th> -->
     </tr>
     <% users.forEach(function(user){ %>
-        <tr>
-            <td> <%= user.username %> </td>
-            <td> <%= user.email %> </td>
-            <!-- <td> 
-                <a class="btn btn-primary" href="/admin/allusers">BLOCK</a>
-            </td> -->
-        </tr>
+       <% if(user.type == "user"){ %>
+            <tr>
+                <td> <%= user.username %> </td>
+                <td> <%= user.email %> </td>
+                <!-- <td> 
+                    <a class="btn btn-primary" href="/admin/allusers">BLOCK</a>
+                </td> -->
+            </tr>
+       <% } %>
+       
     <% }) %>
 </table>
 

@@ -14,8 +14,8 @@ var express               = require("express"),
     methodOverride       = require("method-override"); 
     
 
-    // mongoose.connect("mongodb://localhost/library");
-mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
+    mongoose.connect("mongodb://localhost/library");
+// mongoose.connect("mongodb://Nivedita:nivedita@ds239047.mlab.com:39047/library_mgmt"); //Connect to database
 main.use(bodyParser.urlencoded({extended : true}));   
 main.set("view engine", "ejs");
 main.use(methodOverride("_method"));
@@ -108,27 +108,27 @@ main.get("/decision/user_logout", function(req, res){
         res.redirect("/decision");
 });
 
-main.get("/decision/adminsignup", function(req, res){  //admin signup route
-    res.render("admin_signup");
-});
+// main.get("/decision/adminsignup", function(req, res){  //admin signup route
+//     res.render("admin_signup");
+// });
 
 
-main.post("/decision/admin_signup", function(req, res){ //to handle admin sign up
-    var newUser = new user({
-        username : req.body.username,
-        type    : "admin"
-    });
+// main.post("/decision/admin_signup", function(req, res){ //to handle admin sign up
+//     var newUser = new user({
+//         username : req.body.username,
+//         type    : "admin"
+//     });
         
-         user.register(newUser,req.body.password,function(err, user){
-        if(err){
-            console.log(err);
-        }else{
-            passport.authenticate("local")(req, res, function(){
-                res.redirect("/admin");
-            });
-        }
-    });
-});
+//          user.register(newUser,req.body.password,function(err, user){
+//         if(err){
+//             console.log(err);
+//         }else{
+//             passport.authenticate("local")(req, res, function(){
+//                 res.redirect("/admin");
+//             });
+//         }
+//     });
+// });
 
 main.get("/decision/admin_login", function(req, res){ //admin login
     res.render("admin_login");
@@ -345,6 +345,6 @@ function isLoggedin(req, res, next){
 //============
 //Listen route
 //============
-main.listen(process.env.PORT, function(req, res){
+main.listen(process.env.PORT||3003, function(req, res){
     console.log("SERVER IS STARTED");
 });
