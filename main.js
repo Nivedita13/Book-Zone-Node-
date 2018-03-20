@@ -6,67 +6,58 @@ var express               = require("express"),
     mongoose              = require("mongoose"),
     bodyParser            = require("body-parser"),
     passport              = require("passport"),
-    LocalStrategy         = require("passport-local"),
-    passportLocalMongoose = require("passport-local-mongoose"),
-    user                  = require("./models/user_schema"),
+    User                  = require("./models/user_schema"),
     books                 = require("./models/books"),
     requested_books       = require("./models/requestedBooks_schema"),
-    methodOverride        = require("method-override"),
-    flash                 = require("connect-flash"); 
+    cors                  = require("cors"),
+    JwtStrategy 		  = require('passport-jwt').Strategy,
+    jwt                   = require('jsonwebtoken'),
+    bcrypt                = require("bcryptjs"),
+    ExtractJwt 	          = require('passport-jwt').ExtractJwt;
     
 
-mongoose.connect("mongodb://Nivedita:nivedita@ds243798.mlab.com:43798/library"); //Connect to database
-main.use(bodyParser.urlencoded({extended : true}));   
-main.set("view engine", "ejs");
-main.use(methodOverride("_method"));
-main.use(flash());
+
+
+mongoose.connect("mongodb://localhost/library",function(err,db){
+    if(err){
+        console.log("Something went wrong");
+    }else{
+        console.log("Server Connected");
+    }
+}); //Connect to database
+
+main.use(cors());
+
+main.use(bodyParser.json());
+
+// main.set("view engine", "ejs");
+
 //======================
 //Passport configuration
 //======================
-main.use(require("express-session")({
-    secret : "COCO is damn cute",
-    resave : false,
-    saveUninitialized : false
-}));
 
 main.use(passport.initialize());
-main.use(passport.session());
-passport.use(new LocalStrategy(user.authenticate()));
-passport.serializeUser(user.serializeUser());
-passport.deserializeUser(user.deserializeUser());
 
-main.use(function(req, res, next){
-    res.locals.currentUser = req.user;
-    res.locals.error   = req.flash("error");
-    res.locals.success  = req.flash("success") ;
-    next();
- });
- 
+main.use(passport.session());
+
+require('./passport')(passport); 
 //============================
 //Routes
 //=============================
 
 
 
-main.get("/", function(req, res){   //main route
-    res.render("start");
-});
-
-main.get("/decision", function(req, res){  //route to seelct user or admin
-    res.render("decision");
-});
-
-// main.get("/new", function(req, res){  
-//     res.render("new");
+// main.get("/", function(req, res){   //main route
+//     res.render("start");
 // });
 
-// main.post("/new", function(req, res){
-//     r
+// main.get("/decision", function(req, res){  //route to seelct user or admin
+//     res.render("decision");
 // });
 
-main.get("/user",isUser, function(req, res){  //user route
-    res.render("user");
-});
+// main.get("/user",isUser, function(req, res){  //user route
+//     res.render("user");
+// });
 
 
 
@@ -75,27 +66,38 @@ main.get("/decision/user_signup", function(req, res){  //user signup route
     res.render("user_signup");
 });
 
-main.post("/decision/user_signup", function(req, res){ //to handle user sign up
-    var newUser = new user({
-        username : req.body.username,
-        email    : req.body.email,
-        type    : "user"
-    });
-        
-         user.register(newUser,req.body.password,function(err, user){
-        if(err){
-            console.log(err);
-            res.render("user_signup");
-        }else{
-            passport.authenticate("local")(req, res, function(){
-                res.redirect("/user");
-            });
-        }
- });
-});
 
-main.get("/decision/user_login", function(req, res){  //user login route
-    res.render("user_login");
+
+main.post("/decision/user_signup",function(req,res)
+	{
+
+		
+		var newUser=new User(req.body);
+        var password=req.body.password;
+    
+
+
+             bcrypt.genSalt(10,(err,salt)=>{
+             	bcrypt.hash(password,salt,(err,hash)=>{
+             		if(err) throw err;
+             		newUser.password=hash;
+
+					 newUser.save((err,user)=>{
+						 if(err)
+						return res.json({success:false,msg:"This username is already registered !"});
+						 if(user)
+					    res.json({success:true,msg:"You are Registered"});
+						 
+					 });
+             	});
+             });
+		
+	
+	});
+
+
+main.get("/decision/user_login",passport.authenticate('jwt',{session:false}), function(req, res){  //user login route
+    res.json(req.user);
 });
 
 main.post("/decision/user_login", passport.authenticate("local",  //handle login route
@@ -105,51 +107,87 @@ main.post("/decision/user_login", passport.authenticate("local",  //handle login
 }), function(req, res){ 
     });
 
-main.get("/decision/user_logout", function(req, res){
-        req.logout();
-        res.redirect("/decision");
-});
+main.get("/decision/user_logout",function(req,res)
+	{
+		req.logout();
+		console.log("User Logged Out");
+		res.json({success:true,msg:"Successfully Logged Out"})
+	});
 
-// main.get("/decision/adminsignup", function(req, res){  //admin signup route
-//     res.render("admin_signup");
-// });
-
-
-// main.post("/decision/admin_signup", function(req, res){ //to handle admin sign up
-//     var newUser = new user({
-//         username : req.body.username,
-//         type    : "admin"
-//     });
-        
-//          user.register(newUser,req.body.password,function(err, user){
-//         if(err){
-//             console.log(err);
-//         }else{
-//             passport.authenticate("local")(req, res, function(){
-//                 res.redirect("/admin");
-//             });
-//         }
-//     });
-// });
 
 main.get("/decision/admin_login", function(req, res){ //admin login
     res.render("admin_login");
 });
 
-main.post("/decision/admin_login", passport.authenticate("local",  //handle admin login route
-    {
-        successRedirect:"/admin",
-        failureRediect : "/decision/admin_login"
-}), function(req, res){ 
-    });
+main.post("/decision/login",(req,res,next)=>{
+	const username =req.body.username;
+	const password =req.body.password;
 
-main.get("decision/admin_logout", function(req, res){
-        req.logout();
-        res.redirect("/decision");
+	User.findOne({username:username},(err,user)=>{
+		if(err) 
+			{
+			res.json({success:false, msg:"Somthing went wrong"});
+
+				throw err;
+			}
+		if(!user)
+		{
+			return res.json({success:false, msg:"User not found !"});
+		}
+		User.comparePassword(password,user.password,(err,isMatch)=>{
+		if(err) {
+			res.json({success:false, msg:"Somthing went wrong"});
+            throw err;
+		}
+
+		if(isMatch)
+		{
+			const token=jwt.sign({data: user},'Hello world',{
+				expiresIn:604800  // 1 Week
+			});
+			res.json({
+
+				success:true,
+				msg:"Successfully login",
+				token:`Bearer ${token}`,
+				user:{
+                    username :  user.username,
+                    email    :  user.email,
+                    type     :  user.type,
+                    password : user.password,
+                    requested_books : user.requested_books,
+                    books_have  : user.books_have
+				}
+
+			});	
+		}
+
+		else
+		{
+			return res.json({success:false,msg:"Wrong password"});
+		}
+
+
+		});
+	});
+
 });
 
+main.post("/decision/admin_login", passport.authenticate("local"),function(req, res){ 
+    console.log('signin: ',req.body);
 
-main.get("/admin",isAdmin ,function(req, res){  //admin route
+    res.json({success: true});
+    });
+
+    main.get("/decision/admin_logout",function(req,res)
+	{
+		req.logout();
+		console.log("User Logged Out");
+		res.json({success:true,msg:"Successfully Logged Out"})
+	});
+
+
+main.get("/admin", function(req, res){  //admin route
     res.render("admin");
 });
 
@@ -158,16 +196,17 @@ main.get("/books_entry", isLoggedin, function(req, res){  //books route
 });
 
 main.get("/admin/allusers",function(req, res){   // to show all users to admin
-    user.find(function(err,allUsers){
-        if(err){
-            console.log(err);
-        }else{
-             res.render("admin_allusers",{users:allUsers});
-        }
+        User.find(function(err,allUsers){
+            if(err){
+                console.log(err);
+            }else{
+                console.log(allUsers);
+                res.json(allUsers);
+            }
+        });
     });
-}); 
 
-main.post("/books_entry", function(req, res){ //handles new book entry
+main.post("/books_entry",passport.authenticate('jwt',{session : false}), function(req, res){ //handles new book entry
     var newBook = new books({
         name    : req.body.name,
         subject : req.body.subject,
@@ -178,9 +217,10 @@ main.post("/books_entry", function(req, res){ //handles new book entry
     books.create(newBook, function(err, createdBook){
         if(err){
             console.log(err);
-            res.redirect("/books_entry");
+            return res.json({success:false,message:"book is not added"});
         }else{
-            res.render("admin");
+            console.log("Book Added")
+            return res.json(createdBook);
         }
     });
 });
@@ -189,18 +229,21 @@ main.get("/book/edit/:bookid", function(req, res){
     books.findById(req.params.bookid, function(err, foundBook){
         if(err){
             console.log(err);
+            return res.json({success:false,message:"book is not edited"});
         }else{
-            res.render("edit_book",{book : foundBook});
+            console.log("Book Edited")
+            return res.json(foundBook);
         }
     });
 });
 
 main.put("/book/:bookid", function(req, res){
-    books.findByIdAndUpdate(req.params.bookid,req.body.book ,function(err, updatedBook){
+    console.log(req.body);
+    books.findByIdAndUpdate(req.params.bookid,req.body ,function(err, updatedBook){
         if(err){
             console.log(err);
         }else{
-            res.redirect("/admin_books");
+            res.json(updatedBook);
         }
     });
 });
@@ -215,12 +258,13 @@ main.get("/user_books",isLoggedin ,function(req, res){
     });
 });
 
-main.get("/admin_books",isLoggedin, function(req, res){
+main.get("/admin_books", function(req, res){
     books.find({},function(err,allBooks){
         if(err){
             console.log(err);
         }else{
-             res.render("admin_books",{books:allBooks});
+            console.log(allBooks);
+            res.json(allBooks);
         }
     });
 });
@@ -263,12 +307,12 @@ user.findById(req.params.userid , function(err, foundedUser){
     
 });
 
-main.get("/admin/requested_books",isLoggedin, function(req, res){
+main.get("/admin/requested_books", function(req, res){
     books.find(function(err, foundBooks){
         if(err){
             console.log(err);
         }else{
-            res.render("requested_books", {allBooks : foundBooks});
+            res.json(foundBooks);    
         }
     })
 });
@@ -281,19 +325,15 @@ main.get("/admin/requested_books/:bookid",isLoggedin, function(req, res){
                 console.log(err.message);
             }else{
                     console.log('from book schema ',foundBook.requestedUser);
-                    // foundBook.requestedUser.forEach(function(userid){
                         var users = foundBook.requestedUser;
                         user.find({_id: users }, function(err, users){
                             if(err){
                                 console.log(err); 
                             }else{
-                                // userlist.push(user);
                                 
                                 users.forEach((i)=>{
                                     username.push(i);
                                 })
-                                // console.log('from user schema: ',username);
-                                // userlist.push(user.username);
                                 res.render("book_profile", {book : foundBook, usersarray : username })
                             }
                         });
@@ -312,34 +352,26 @@ main.get("/admin/requested_books/:bookid",isLoggedin, function(req, res){
         }else{
             foundUser.books_have.push(req.params.bookid);
             foundUser.save();
-            // console.log('array',req.params.userid);
-            // console.log(foundUser.requested_books.indexOf(req.params.userid));
-            // foundUser.requested_books.slice(foundUser.requested_books.indexOf(req.params.userid),1);
-            // console.log(foundUser.requested_books);
         }
     });
  });
 
 
-//  main.get("/admin/deny/:bookid/:userid", function(req, res){
-    
-//     user.findById(req.params.userid, function(err, foundUser){
-//         if(err){
-//             console.log(err.message);
-//         }else{
-//             console.log(foundUser);
-//         }
-//     });
-// });
-
-
 //middleware
 function isLoggedin(req, res, next){
-    if(req.isAuthenticated()){
-        next();
-    }else{
-        console.log("login first");
-        res.redirect("decision");
+    if(req.user)
+    {    
+    //req.user1=req.user;
+       return next();	
+    
+    }
+    else
+    {
+
+        res.json({
+            success:false,
+            msg:"You need to login first !"
+        });
     }
 }
 
@@ -367,6 +399,6 @@ function isUser(req, res, next){
 //============
 //Listen route
 //============
-main.listen(process.env.PORT, function(req, res){
+main.listen(3000 , function(req, res){
     console.log("SERVER IS STARTED");
 });

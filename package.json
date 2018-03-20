@@ -10,14 +10,13 @@
   "author": "Nivedita",
   "license": "ISC",
   "dependencies": {
-    "connect-flash": "^0.1.1",
-    "ejs": "^2.5.7",
     "express": "^4.16.2",
-    "express-session": "^1.15.6",
-    "method-override": "^2.3.10",
-    "mongoose": "^5.0.4",
-    "passport": "^0.4.0",
-    "passport-local": "^1.0.0",
-    "passport-local-mongoose": "^4.5.0"
+    "mongoose": "^5.0.6",
+    "bcryptjs": "*",
+    "cors": "^2.8.4",
+    "jsonwebtoken": "*",
+    "body-parser": "^1.18.2",
+    "passport": "*",
+    "passport-jwt": "^4.0.0"
   }
 }
