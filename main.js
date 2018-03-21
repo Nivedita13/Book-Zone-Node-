@@ -16,15 +16,15 @@ var express               = require("express"),
     ExtractJwt 	          = require('passport-jwt').ExtractJwt;
     
 
+mongoose.connect("mongodb://angularlib:angularlib@ds121089.mlab.com:21089/angularlib");
 
-
-mongoose.connect("mongodb://localhost/library",function(err,db){
-    if(err){
-        console.log("Something went wrong");
-    }else{
-        console.log("Server Connected");
-    }
-}); //Connect to database
+//mongoose.connect("mongodb://localhost/library",function(err,db){
+//     if(err){
+//         console.log("Something went wrong");
+//     }else{
+//         console.log("Server Connected");
+//     }
+// }); //Connect to database
 
 main.use(cors());
 
@@ -151,6 +151,7 @@ main.post("/decision/login",(req,res,next)=>{
 				msg:"Successfully login",
 				token:`Bearer ${token}`,
 				user:{
+                    userid : user._id,
                     username :  user.username,
                     email    :  user.email,
                     type     :  user.type,
@@ -248,30 +249,29 @@ main.put("/book/:bookid", function(req, res){
     });
 });
 
-main.get("/user_books",isLoggedin ,function(req, res){
-    books.find({},function(err,allBooks){
-        if(err){
-            console.log(err);
-        }else{
-             res.render("user_books",{books:allBooks});
-        }
-    });
-});
+// main.get("/user_books",isLoggedin ,function(req, res){
+//     books.find({},function(err,allBooks){
+//         if(err){
+//             console.log(err);
+//         }else{
+//              res.render("user_books",{books:allBooks});
+//         }
+//     });
+// });
 
-main.get("/admin_books", function(req, res){
+main.get("/allbooks", function(req, res){
     books.find({},function(err,allBooks){
         if(err){
             console.log(err);
         }else{
-            console.log(allBooks);
             res.json(allBooks);
         }
     });
 });
 
-main.get("/issue/:bookid/:userid",isLoggedin, function(req, res){
+main.get("/issue/:bookid/:userid", function(req, res){
     console.log('bbbb',req.params.bookid);
-    console.log('vvvvvv',req.params.userid);
+    console.log('vvvvvv = >>',req.params.userid);
     var request = {
         user : req.params.userid,
         book : req.params.bookid
@@ -283,29 +283,28 @@ main.get("/issue/:bookid/:userid",isLoggedin, function(req, res){
         }
     });
 
-user.findById(req.params.userid , function(err, foundedUser){
+    User.findById(req.params.userid , function(err, foundedUser){
     if(err){
         console.log(err);
     }else{
         foundedUser.requested_books.push(req.params.bookid);
         foundedUser.save();
+        books.findById(req.params.bookid, function(err, foundBook){
+            if(err){
+                console.log(err);
+            }else{
+                 foundBook.requestedUser.push(req.params.userid);  // pushes user id in requestedBook array of books schema 
+                 foundBook.save();   
+                //  console.log('aaaaa',foundBook);
+                return res.json({"Book" : foundBook, "User" : foundedUser});
+                }
+        });
     }
 });
 
-    books.findById(req.params.bookid, function(err, foundBook){
-        if(err){
-            console.log(err);
-        }else{
-             foundBook.requestedUser.push(req.params.userid);  // pushes user id in requestedBook array of books schema 
-             foundBook.save();   
-             console.log('aaaaa',foundBook);
-                console.log('rrrrrr',foundBook.requestedUser);
-                         res.render("user");
-            }
-    });
-
-    
 });
+
+
 
 main.get("/admin/requested_books", function(req, res){
     books.find(function(err, foundBooks){
@@ -317,16 +316,17 @@ main.get("/admin/requested_books", function(req, res){
     })
 });
 
-main.get("/admin/requested_books/:bookid",isLoggedin, function(req, res){
+main.get("/admin/requested_books/:bookid", function(req, res){
 
     var username = [];
     books.findById(req.params.bookid, function(err, foundBook){
             if(err){
                 console.log(err.message);
             }else{
+            
                     console.log('from book schema ',foundBook.requestedUser);
                         var users = foundBook.requestedUser;
-                        user.find({_id: users }, function(err, users){
+                        User.find({_id: users }, function(err, users){
                             if(err){
                                 console.log(err); 
                             }else{
@@ -334,7 +334,8 @@ main.get("/admin/requested_books/:bookid",isLoggedin, function(req, res){
                                 users.forEach((i)=>{
                                     username.push(i);
                                 })
-                                res.render("book_profile", {book : foundBook, usersarray : username })
+                                // res.render("book_profile", {book : foundBook, usersarray : username })
+                                res.json({foundBook,username});
                             }
                         });
             }
