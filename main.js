@@ -201,11 +201,23 @@ main.get("/admin/allusers",function(req, res){   // to show all users to admin
             if(err){
                 console.log(err);
             }else{
-                console.log(allUsers);
                 res.json(allUsers);
             }
         });
     });
+
+// main.get("/admin/:userId", function(req, res){
+
+//     User.findById(req.params.userId, function(err, foundUser){
+//         if(err){
+//             console.log(err);
+//             return res.json({success:false,message:"user not found"});
+//         }else{
+//                     return res.json({username : foundUser.username, success : true});            
+//         }
+//     });
+
+// });
 
 main.post("/books_entry",passport.authenticate('jwt',{session : false}), function(req, res){ //handles new book entry
     var newBook = new books({
@@ -232,7 +244,6 @@ main.get("/book/edit/:bookid", function(req, res){
             console.log(err);
             return res.json({success:false,message:"book is not edited"});
         }else{
-            console.log("Book Edited")
             return res.json(foundBook);
         }
     });
@@ -306,15 +317,32 @@ main.get("/issue/:bookid/:userid", function(req, res){
 
 
 
-main.get("/admin/requested_books", function(req, res){
+main.get("/admin/requestedbooks", function(req, res){
     books.find(function(err, foundBooks){
         if(err){
-            console.log(err);
+            console.log(err.message);
         }else{
+            console.log(foundBooks);
             res.json(foundBooks);    
         }
     })
 });
+
+
+main.get("/admin/:userId", function(req, res){
+
+    User.findById(req.params.userId, function(err, foundUser){
+        if(err){
+            console.log(err);
+            return res.json({success:false,message:"user not found"});
+        }else{
+                    return res.json({username : foundUser.username, success : true});            
+        }
+   });
+    
+
+});
+
 
 main.get("/admin/requested_books/:bookid", function(req, res){
 
@@ -335,7 +363,8 @@ main.get("/admin/requested_books/:bookid", function(req, res){
                                     username.push(i);
                                 })
                                 // res.render("book_profile", {book : foundBook, usersarray : username })
-                                res.json({foundBook,username});
+                              return res.json({foundBook,username});
+                              
                             }
                         });
             }
