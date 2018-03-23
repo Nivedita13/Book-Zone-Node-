@@ -206,18 +206,7 @@ main.get("/admin/allusers",function(req, res){   // to show all users to admin
         });
     });
 
-// main.get("/admin/:userId", function(req, res){
 
-//     User.findById(req.params.userId, function(err, foundUser){
-//         if(err){
-//             console.log(err);
-//             return res.json({success:false,message:"user not found"});
-//         }else{
-//                     return res.json({username : foundUser.username, success : true});            
-//         }
-//     });
-
-// });
 
 main.post("/books_entry",passport.authenticate('jwt',{session : false}), function(req, res){ //handles new book entry
     var newBook = new books({
